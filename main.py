@@ -72,10 +72,24 @@ def descriptive_statistics(df: pd.DataFrame, cols: list):
     dataframe_jarque_bera(df, cols)
 
 def plot_trends(df: pd.DataFrame, cols: list, with_graph: bool = True):
+    nrows = int(len(cols) / 2) + 1 if len(cols) % 2 != 0 else 0
+    ncols = int(len(cols) / nrows) + 1 if len(cols) % 2 != 0 else 0
+    fig, ax = plt.subplots(nrows=nrows, ncols=ncols)
+    fig.suptitle('Trend of features used in analysis')
+    index_col = 0
+    index_row = 0
+
     if with_graph is True:
         for col in cols:
-            df.plot(x='date', y=col, rot=-45)
-            plt.show()
+            df.plot(ax=ax[index_row][index_col], x='date', y=col, rot=-45, subplots=True)
+            ax[index_row][index_col].set_title('Trend of "%s"' % col)
+
+            index_col += 1
+            if index_col >= ncols:
+                index_row += 1
+                index_col = 0
+
+        plt.show()
 
 def main():
     original_cols = [
