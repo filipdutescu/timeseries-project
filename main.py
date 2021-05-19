@@ -26,7 +26,7 @@ def basic_statistics(data: pd.DataFrame, with_graph: bool = False):
         data.plot(x='date', y='price', kind='hist', rot=-45)
         plt.show()
 
-def adfuller_test(series: pd.DataFrame):
+def series_adfuller_test(series: pd.Series):
     test_result = adfuller(series, autolag='AIC')
 
     print('ADF Statistic: \t%f' % test_result[0])
@@ -36,6 +36,17 @@ def adfuller_test(series: pd.DataFrame):
         print('\t%s, %f' % (key, value))
 
     print()
+
+def dataframe_adfuller_test(df: pd.DataFrame, cols: list, with_graph: bool = False):
+    for col in cols:
+        if col != 'date':
+            print('\t==== ADF for %s ====\n' % col)
+            series_adfuller_test(df[col])
+            
+            if with_graph is True:
+                df.plot(x='date', y=col, kind='hist', rot=-45)
+                plt.show()
+
 
 def main():
     original_cols = [
@@ -70,11 +81,7 @@ def main():
     btc_data = read_csv(source_file, original_cols, cols)
 
     basic_statistics(btc_data, with_graph=False)
-
-    for col in cols:
-        if col != 'date':
-            print('\t==== ADF for %s ====\n' % col)
-            adfuller_test(btc_data[col])
+    dataframe_adfuller_test(btc_data, cols, with_graph=False)
 
 if __name__ == '__main__':
     main()
