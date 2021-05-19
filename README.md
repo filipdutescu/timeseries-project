@@ -1,6 +1,6 @@
 # Time series project
 
-This repo represents the code part of the team project made with [@SebastianDochia](@SebastianDochia),
+This repo represents the code part of the team project made with [@SebastianDochia](https://github.com/SebastianDochia),
 for our Time series course, from our Bachelor's Degree program.
 
 ## Awknoledgements
