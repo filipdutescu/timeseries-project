@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from statsmodels.tsa.stattools import adfuller
+from statsmodels.stats.stattools import jarque_bera
 
 def read_csv(filename: str, original_cols: list, new_cols: list = None):
     csv = pd.read_csv(filename, usecols=original_cols)
@@ -47,6 +48,27 @@ def dataframe_adfuller_test(df: pd.DataFrame, cols: list, with_graph: bool = Fal
                 df.plot(x='date', y=col, kind='hist', rot=-45)
                 plt.show()
 
+def dataframe_skewness(df: pd.DataFrame, cols: list):
+    print('\t==== Skewness ====\n')
+    for col in cols:
+        if col != 'date':
+            print('%s: %f' % (col, df[col].skew()))
+    print()
+
+
+def dataframe_kurtosis(df: pd.DataFrame, cols: list):
+    print('\t==== Kurtosis ====\n')
+    for col in cols:
+        if col != 'date':
+            print('%s: %f' % (col, df[col].kurtosis()))
+    print()
+
+def dataframe_jarque_bera(df: pd.DataFrame, cols: list):
+    print('\t==== Jarque Bera ====\n')
+    for col in cols:
+        if col != 'date':
+            print('%s: ' % col, jarque_bera(df[col]))
+    print()
 
 def main():
     original_cols = [
@@ -81,7 +103,11 @@ def main():
     btc_data = read_csv(source_file, original_cols, cols)
 
     basic_statistics(btc_data, with_graph=False)
+
     dataframe_adfuller_test(btc_data, cols, with_graph=False)
+    dataframe_skewness(btc_data, cols)
+    dataframe_kurtosis(btc_data, cols)
+    dataframe_jarque_bera(btc_data, cols)
 
 if __name__ == '__main__':
     main()
