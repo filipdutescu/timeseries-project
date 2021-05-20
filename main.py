@@ -15,7 +15,7 @@ def read_csv(filename: str, original_cols: list, new_cols: list = None):
 
     return csv
 
-def basic_statistics(data: pd.DataFrame, with_graph: bool = False):
+def basic_statistics(data: pd.DataFrame, with_graph: bool = True):
     print(data.info())
     print(data.describe())
     print()
@@ -37,7 +37,7 @@ def series_adfuller_test(series: pd.Series):
 
     print()
 
-def dataframe_adfuller_test(df: pd.DataFrame, cols: list, with_graph: bool = False):
+def dataframe_adfuller_test(df: pd.DataFrame, cols: list, with_graph: bool = True):
     for col in cols:
         print('\t==== ADF for %s ====\n' % col)
         series_adfuller_test(df[col])
@@ -100,6 +100,12 @@ def correl(df: pd.DataFrame, cols: list):
             print('%d:\t' % lag, df[col].autocorr(lag=lag))
     print()
 
+def check_stationary_or_not(df: pd.DataFrame, cols: list, with_graph: bool = True):
+    if with_graph is True:
+        for col in cols:
+            df[col].diff().plot(title='Trend of %s' % col)
+            plt.show()
+
 def main():
     original_cols = [
         'Date',
@@ -122,6 +128,7 @@ def main():
     plot_trends(btc_data, stat_cols, with_graph=False)
 
     correl(btc_data, stat_cols)
+    check_stationary_or_not(btc_data, stat_cols, with_graph=True)
 
 if __name__ == '__main__':
     main()
