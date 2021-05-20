@@ -1,8 +1,10 @@
 import pandas as pd
 import numpy as np
+import seaborn as sns
 
 import matplotlib.pyplot as plt
 
+from statsmodels.graphics.tsaplots import plot_acf
 from statsmodels.tsa.stattools import adfuller
 from statsmodels.stats.stattools import jarque_bera
 
@@ -94,10 +96,17 @@ def plot_trends(df: pd.DataFrame, cols: list, with_graph: bool = True):
 
 def correl(df: pd.DataFrame, cols: list):
     print('\t==== Correlogram ====\n')
+    sns.pairplot(df)
+    plt.show()
+    plot_acf(df['price'])
+    plot_acf(df['market_cap'])
+    plot_acf(df['difficulty'])
+    plt.show()
     for col in cols:
         print('%s:' % col)
         for lag in range(1, 16):
             print('%d:\t' % lag, df[col].autocorr(lag=lag))
+
     print()
 
 def check_stationary_or_not(df: pd.DataFrame, cols: list, with_graph: bool = True):
