@@ -90,6 +90,12 @@ def plot_trends(df: pd.DataFrame, cols: list, with_graph: bool = True):
                 index_col = 0
 
         plt.show()
+    print()
+
+def correl(df: pd.DataFrame):
+    print('\t==== Correlogram matrix ====\n')
+    print(df.corr())
+    print()
 
 def main():
     original_cols = [
@@ -111,6 +117,8 @@ def main():
     basic_statistics(btc_data, with_graph=False)
     descriptive_statistics(btc_data, stat_cols)
     plot_trends(btc_data, stat_cols, with_graph=True)
+
+    correl(btc_data)
 
 if __name__ == '__main__':
     main()
