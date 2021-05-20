@@ -1,13 +1,21 @@
 import pandas as pd
+from datetime import datetime
 import numpy as np
 
 import matplotlib.pyplot as plt
 
 from statsmodels.tsa.stattools import adfuller
+from statsmodels.tsa.arima.model import ARIMA
 from statsmodels.stats.stattools import jarque_bera
 
 def read_csv(filename: str, original_cols: list, new_cols: list = None):
-    csv = pd.read_csv(filename, usecols=original_cols)
+    csv = pd.read_csv(
+            filename,
+            usecols=original_cols,
+            index_col=0,
+            parse_dates=[ 'Date' ],
+            date_parser=lambda x: datetime.strptime('0' + x if int(str(x).split('-')[0]) < 10 else x, '%d-%b-%y'))
+    csv.index = csv.index.to_period('D')
 
     if new_cols is not None:
         cols_dict = { og_col: new_col for (og_col, new_col) in zip(original_cols, new_cols) }
@@ -72,14 +80,13 @@ def descriptive_statistics(df: pd.DataFrame, cols: list):
     dataframe_jarque_bera(df, cols)
 
 def plot_trends(df: pd.DataFrame, cols: list, with_graph: bool = True):
-    nrows = int(len(cols) / 2) + 1 if len(cols) % 2 != 0 else 0
-    ncols = int(len(cols) / nrows) + 1 if len(cols) % 2 != 0 else 0
-    fig, ax = plt.subplots(nrows=nrows, ncols=ncols)
-    fig.suptitle('Trend of features used in analysis')
-    index_col = 0
-    index_row = 0
-
     if with_graph is True:
+        nrows = int(len(cols) / 2) + 1 if len(cols) % 2 != 0 else 0
+        ncols = int(len(cols) / nrows) + 1 if len(cols) % 2 != 0 else 0
+        index_col = 0
+        index_row = 0
+        fig, ax = plt.subplots(nrows=nrows, ncols=ncols)
+        fig.suptitle('Trend of features used in analysis')
         for col in cols:
             df.plot(ax=ax[index_row][index_col], x='date', y=col, rot=-45, subplots=True)
             ax[index_row][index_col].set_title('Trend of "%s"' % col)
@@ -90,7 +97,7 @@ def plot_trends(df: pd.DataFrame, cols: list, with_graph: bool = True):
                 index_col = 0
 
         plt.show()
-    print()
+        print()
 
 def correl(df: pd.DataFrame, cols: list):
     print('\t==== Correlogram ====\n')
@@ -104,6 +111,29 @@ def check_stationary_or_not(df: pd.DataFrame, cols: list, with_graph: bool = Tru
     if with_graph is True:
         for col in cols:
             df[col].diff().plot(title='Trend of %s' % col)
+            plt.show()
+
+def arima(df: pd.DataFrame, cols: list, with_graph: bool = False):
+    arima_model(df, cols, lag=5, order=1, moving_avg_model=0, with_graph=with_graph)
+
+def arima_model(df: pd.DataFrame, cols: list, lag: int, order: int, moving_avg_model: int, with_graph: bool):
+    for col in cols:
+        model = ARIMA(df[col], order=(lag, order, moving_avg_model))
+        model_fit = model.fit()
+
+        print('\t==== Summary of ARIMA model for %s ====\n' % col)
+        print(model_fit.summary())
+
+        print('\t==== Summary of residuals for %s ====\n' % col)
+        residuals = pd.DataFrame(model_fit.resid)
+        print(residuals.describe())
+        print()
+
+        if with_graph is True:
+            residuals.plot(title='Residuals %s' % col)
+            plt.show()
+
+            residuals.plot(kind='kde', title='Density of residuals %s' % col)
             plt.show()
 
 def main():
@@ -128,7 +158,9 @@ def main():
     plot_trends(btc_data, stat_cols, with_graph=False)
 
     correl(btc_data, stat_cols)
-    check_stationary_or_not(btc_data, stat_cols, with_graph=True)
+    check_stationary_or_not(btc_data, stat_cols, with_graph=False)
+
+    arima(btc_data, stat_cols, with_graph=True)
 
 if __name__ == '__main__':
     main()
