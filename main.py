@@ -101,14 +101,17 @@ def plot_trends(df: pd.DataFrame, cols: list, with_graph: bool = True):
         plt.show()
         print()
 
-def correl(df: pd.DataFrame, cols: list):
+def correl(df: pd.DataFrame, cols: list, with_graph: bool = True):
     print('\t==== Correlogram ====\n')
-    sns.pairplot(df)
-    plt.show()
-    plot_acf(df['price'])
-    plot_acf(df['market_cap'])
-    plot_acf(df['difficulty'])
-    plt.show()
+
+    if with_graph is True:
+        sns.pairplot(df)
+        plt.show()
+        plot_acf(df['price'])
+        plot_acf(df['market_cap'])
+        plot_acf(df['difficulty'])
+        plt.show()
+
     for col in cols:
         print('%s:' % col)
         for lag in range(1, 16):
@@ -166,7 +169,7 @@ def main():
     descriptive_statistics(btc_data, stat_cols)
     plot_trends(btc_data, stat_cols, with_graph=False)
 
-    correl(btc_data, stat_cols)
+    correl(btc_data, stat_cols, with_graph=False)
     check_stationary_or_not(btc_data, stat_cols, with_graph=False)
 
     arima(btc_data, stat_cols, with_graph=True)
