@@ -92,12 +92,23 @@ def plot_trends(df: pd.DataFrame, cols: list, with_graph: bool = True):
         plt.show()
     print()
 
+<<<<<<< Updated upstream
 def correl(df: pd.DataFrame, cols: list):
     print('\t==== Correlogram ====\n')
     for col in cols:
         print('%s:' % col)
         for lag in range(1, 16):
             print('%d:\t' % lag, df[col].autocorr(lag=lag))
+=======
+def arima_models(df: pd.DataFrame, cols: list):
+    df_price = df['close']
+    
+
+
+def correl(df: pd.DataFrame):
+    print('\t==== Correlogram matrix ====\n')
+    print(df.corr())
+>>>>>>> Stashed changes
     print()
 
 def main():
@@ -119,7 +130,12 @@ def main():
 
     basic_statistics(btc_data, with_graph=False)
     descriptive_statistics(btc_data, stat_cols)
+<<<<<<< Updated upstream
     plot_trends(btc_data, stat_cols, with_graph=False)
+=======
+    plot_trends(btc_data, stat_cols, with_graph=True)
+    arima_models(btc_data, stat_cols)
+>>>>>>> Stashed changes
 
     correl(btc_data, stat_cols)
 
