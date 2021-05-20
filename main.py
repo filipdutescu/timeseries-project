@@ -97,28 +97,12 @@ def main():
         'Close',
         'MarketCap',
         'Difficulty',
-        'MinersRevenue',
-        'TransactionFees_BTC',
-        'Total_Transactions_Per_Day',
-        'NASDAQ Composite',
-        'Dow Jones Industrial Avg',
-        'S&P 500',
-        'Google Trends Interest',
-        'Breakeven Inflation Rate',
     ]
     cols = [
         'date',
         'price',
         'market_cap',
         'difficulty',
-        'miners_revenue',
-        'transaction_fees',
-        'total_transactions_per_day',
-        'nasdaq_composite',
-        'dji_avg',
-        'sp500',
-        'google_trends',
-        'inflation_rate',
     ]
     source_file = 'block_chain_ts.csv'
     btc_data = read_csv(source_file, original_cols, cols)
