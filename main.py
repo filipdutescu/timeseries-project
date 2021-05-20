@@ -135,6 +135,7 @@ def arima_model(df: pd.DataFrame, cols: list, lag: int, order: int, moving_avg_m
 
         print('\t==== Summary of ARIMA model for %s ====\n' % col)
         print(model_fit.summary())
+        print()
 
         print('\t==== Summary of residuals for %s ====\n' % col)
         residuals = pd.DataFrame(model_fit.resid)
