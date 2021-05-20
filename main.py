@@ -92,9 +92,12 @@ def plot_trends(df: pd.DataFrame, cols: list, with_graph: bool = True):
         plt.show()
     print()
 
-def correl(df: pd.DataFrame):
-    print('\t==== Correlogram matrix ====\n')
-    print(df.corr())
+def correl(df: pd.DataFrame, cols: list):
+    print('\t==== Correlogram ====\n')
+    for col in cols:
+        print('%s:' % col)
+        for lag in range(1, 16):
+            print('%d:\t' % lag, df[col].autocorr(lag=lag))
     print()
 
 def main():
@@ -116,9 +119,9 @@ def main():
 
     basic_statistics(btc_data, with_graph=False)
     descriptive_statistics(btc_data, stat_cols)
-    plot_trends(btc_data, stat_cols, with_graph=True)
+    plot_trends(btc_data, stat_cols, with_graph=False)
 
-    correl(btc_data)
+    correl(btc_data, stat_cols)
 
 if __name__ == '__main__':
     main()
