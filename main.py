@@ -130,7 +130,7 @@ def arima(df: pd.DataFrame, cols: list, with_graph: bool = False):
 
 def arima_model(df: pd.DataFrame, cols: list, lag: int, order: int, moving_avg_model: int, with_graph: bool):
     for col in cols:
-        model = ARIMA(df[col], order=(lag, order, moving_avg_model))
+        model = ARIMA(df[col], order=(lag, order, moving_avg_model), freq='D')
         model_fit = model.fit()
 
         print('\t==== Summary of ARIMA model for %s ====\n' % col)
@@ -147,6 +147,9 @@ def arima_model(df: pd.DataFrame, cols: list, lag: int, order: int, moving_avg_m
             plt.show()
 
             residuals.plot(kind='kde', title='Density of residuals %s' % col)
+            plt.show()
+
+            pd.plotting.autocorrelation_plot(residuals)
             plt.show()
 
 def main():
