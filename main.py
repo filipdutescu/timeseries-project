@@ -6,7 +6,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 from statsmodels.graphics.tsaplots import plot_acf
-from statsmodels.tsa.stattools import adfuller, kpss
+from statsmodels.tsa.stattools import adfuller, kpss, pacf, acf
 from statsmodels.tsa.arima.model import ARIMA
 from statsmodels.tsa.arima_model import ARMA
 from statsmodels.stats.stattools import jarque_bera
@@ -135,14 +135,37 @@ def correl(df: pd.DataFrame, cols: list, with_graph: bool = True):
     print()
 
 def check_stationary_or_not(df: pd.DataFrame, cols: list, with_graph: bool = True):
-    if with_graph is True:
-        for col in cols:
-            df[col].plot(title='Trend of %s' % col)
-            plt.show()
+    for col in cols:
+        df[col].plot(title='Trend of %s' % col)
+        plt.show()
 
 def make_stationary(df: pd.DataFrame, cols: list):
     for col in cols:
         df[col] = df[col].apply(lambda x: np.log(x)).diff()
+
+def dataframe_autocorrel_plot(df: pd.DataFrame, cols: list, with_graph: bool = True):
+    for col in cols:
+        print('%s' % col)
+
+        pacf_results = pacf(df[col], nlags=15)
+        for lag in range(1, 16):
+            print('%d:\t' % lag, df[col].autocorr(lag=lag), pacf_results[lag])
+
+        if with_graph is True:
+            ax = pd.plotting.autocorrelation_plot(df[col])
+            ax.set_title('Autocorrelation for %s' % col)
+            plt.show()
+        print()
+
+def dataframe_acf_pacf(df: pd.DataFrame, cols: list):
+    for col in cols:
+        print('%s' % col)
+
+        acf_results, _, q_stat = acf(df[col], nlags=15, qstat=True)
+        pacf_results = pacf(df[col], nlags=15)
+        for lag in range(1, 16):
+            print('%d:\t' % lag, acf_results[lag], pacf_results[lag], q_stat[lag - 1])
+        print()
 
 def arma(df: pd.DataFrame, cols: list, with_graph: bool = False):
     arma_model(df, cols, lag=0, moving_avg_model=0, with_graph=with_graph)
@@ -208,7 +231,10 @@ def main():
     btc_data.set_index('date', inplace=True)
 
     dataframe_adfuller_test(btc_data, stat_cols, with_graph=False)
+    dataframe_autocorrel_plot(btc_data, stat_cols, with_graph=False)
     dataframe_kpss_test(btc_data, stat_cols)
+
+    dataframe_acf_pacf(btc_data, stat_cols)
 
     #arma(btc_data, stat_cols, with_graph=True)
 
