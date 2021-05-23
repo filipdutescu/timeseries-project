@@ -5,7 +5,7 @@ import seaborn as sns
 
 import matplotlib.pyplot as plt
 
-from statsmodels.graphics.tsaplots import plot_acf
+from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 from statsmodels.tsa.stattools import adfuller, kpss, pacf, acf
 from statsmodels.tsa.arima.model import ARIMA
 from statsmodels.tsa.arima_model import ARMA
@@ -167,18 +167,15 @@ def dataframe_acf_pacf(df: pd.DataFrame, cols: list):
             print('%d:\t' % lag, acf_results[lag], pacf_results[lag], q_stat[lag - 1])
         print()
 
-def arma(df: pd.DataFrame, cols: list, with_graph: bool = False):
-    arma_model(df, cols, lag=0, moving_avg_model=0, with_graph=with_graph)
-    arma_model(df, cols, lag=0, moving_avg_model=1, with_graph=False)
-    arma_model(df, cols, lag=1, moving_avg_model=0, with_graph=False)
-    arma_model(df, cols, lag=1, moving_avg_model=1, with_graph=False)
+def arima(df: pd.DataFrame, cols: list, with_graph: bool = False):
+    arima_model(df, cols, lag=0, order=1, moving_avg_model=0, with_graph=with_graph)
 
-def arma_model(df: pd.DataFrame, cols: list, lag: int, moving_avg_model: int, with_graph: bool):
+def arima_model(df: pd.DataFrame, cols: list, lag: int, order: int, moving_avg_model: int, with_graph: bool):
     for col in cols:
-        model = ARMA(df[col], order=(lag, moving_avg_model), freq='D')
+        model = ARIMA(df[col], order=(lag, order, moving_avg_model))
         model_fit = model.fit()
 
-        print('\t==== Summary of ARMA(%d, %d) model for %s ====\n' % (lag, moving_avg_model, col))
+        print('\t==== Summary of ARIMA(%d, %d, %d) model for %s ====\n' % (lag, order, moving_avg_model, col))
         print(model_fit.summary())
         print()
 
@@ -188,19 +185,35 @@ def arma_model(df: pd.DataFrame, cols: list, lag: int, moving_avg_model: int, wi
         print()
 
         if with_graph is True:
-            ax = pd.plotting.autocorrelation_plot(df[col])
-            ax.set_title('Autocorrelation plot for %s' % col)
+            plot_pacf(residuals, title='PAC plot for residuals of %s' % col)
             plt.show()
-
-            #residuals.plot(title='Residuals %s' % col)
-            #plt.show()
 
             #residuals.plot(kind='kde', title='Density of residuals %s' % col)
             #plt.show()
 
-            #ax = pd.plotting.autocorrelation_plot(residuals)
-            #ax.set_title('Autocorrelation plot for %s residuals' % col)
-            #plt.show()
+            ax = pd.plotting.autocorrelation_plot(residuals)
+            ax.set_title('AC plot for residuals of %s' % col)
+            plt.show()
+
+def arma(df: pd.DataFrame, cols: list):
+    arma_model(df, cols, lag=0, moving_avg_model=0)
+    arma_model(df, cols, lag=0, moving_avg_model=1)
+    arma_model(df, cols, lag=1, moving_avg_model=0)
+    arma_model(df, cols, lag=1, moving_avg_model=1)
+
+def arma_model(df: pd.DataFrame, cols: list, lag: int, moving_avg_model: int):
+    for col in cols:
+        model = ARMA(df[col], order=(lag, moving_avg_model))
+        model_fit = model.fit()
+
+        print('\t==== Summary of ARIMA(%d, %d) model for %s ====\n' % (lag, moving_avg_model, col))
+        print(model_fit.summary())
+        print()
+
+        print('\t==== Summary of residuals for %s ====\n' % col)
+        residuals = pd.DataFrame(model_fit.resid)
+        print(residuals.describe())
+        print()
 
 def main():
     original_cols = [
@@ -236,7 +249,8 @@ def main():
 
     dataframe_acf_pacf(btc_data, stat_cols)
 
-    #arma(btc_data, stat_cols, with_graph=True)
+    arima(btc_data, list(filter(lambda x: x != 'difficulty', stat_cols)), with_graph=False)
+    arma(btc_data, list(filter(lambda x: x == 'difficulty', stat_cols)))
 
 if __name__ == '__main__':
     main()
