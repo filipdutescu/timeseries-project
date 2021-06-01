@@ -179,6 +179,25 @@ def arima_model(df: pd.DataFrame, cols: list, lag: int, order: int, moving_avg_m
         print(model_fit.summary())
         print()
 
+        if lag > 0 or moving_avg_model > 0:
+            hypothesis = list(model_fit.arparams) if lag > 0 else []
+            hypothesis.append(model_fit.maparams if moving_avg_model > 0 else [])
+            r_matrix = np.identity(len(hypothesis))
+            r_matrix = r_matrix[1:,:]
+            print('\t==== F Test ====\n', model_fit.f_test(r_matrix))
+            print()
+
+        x_mean = df[col].mean()
+        sst = df[col].apply(lambda x: (x - x_mean) ** 2).sum()
+        ssr = sst - model_fit.sse
+        r_squared = ssr / sst
+        print('R-squared: %f\n' % r_squared)
+        n = len(df[col])
+        k = len(model_fit.arroots) + len(model_fit.maroots)
+        adj_r_sqr = 1 - ((1 - r_squared) * (n - 1)) / (n - k - 1)
+        print('Adjusted R-squared: %f' % adj_r_sqr)
+        print()
+
         print('\t==== Summary of residuals for %s ====\n' % col)
         residuals = pd.DataFrame(model_fit.resid)
         print(residuals.describe())
@@ -196,10 +215,15 @@ def arima_model(df: pd.DataFrame, cols: list, lag: int, order: int, moving_avg_m
             plt.show()
 
 def arma(df: pd.DataFrame, cols: list):
-    arma_model(df, cols, lag=0, moving_avg_model=0)
-    arma_model(df, cols, lag=0, moving_avg_model=1)
-    arma_model(df, cols, lag=1, moving_avg_model=0)
-    arma_model(df, cols, lag=1, moving_avg_model=1)
+    #arma_model(df, cols, lag=0, moving_avg_model=0)
+    #arma_model(df, cols, lag=0, moving_avg_model=1)
+    #arma_model(df, cols, lag=1, moving_avg_model=0)
+    #arma_model(df, cols, lag=1, moving_avg_model=1)
+
+    arima_model(df, cols, lag=0, order=0, moving_avg_model=0, with_graph=False)
+    arima_model(df, cols, lag=0, order=0, moving_avg_model=1, with_graph=False)
+    arima_model(df, cols, lag=1, order=0, moving_avg_model=0, with_graph=False)
+    arima_model(df, cols, lag=1, order=0, moving_avg_model=1, with_graph=False)
 
 def arma_model(df: pd.DataFrame, cols: list, lag: int, moving_avg_model: int):
     for col in cols:
