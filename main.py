@@ -163,7 +163,6 @@ def dataframe_acf_pacf(df: pd.DataFrame, cols: list):
 
         acf_results, _, q_stat = acf(df[col], nlags=15, qstat=True)
         pacf_results = pacf(df[col], nlags=15)
-        print('len(acf): %d, len(pacf): %d, len(q): %d\n' % (len(acf_results), len(pacf_results), len(q_stat)))
         for lag in range(0, 16):
             print('%d:' % (lag + 1), acf_results[lag], pacf_results[lag], '-' if lag - 1 < 0 else q_stat[lag - 1], sep='\t')
         print()
@@ -195,7 +194,6 @@ def arima_model(df: pd.DataFrame, cols: list, lag: int, order: int, moving_avg_m
         print('\t==== Correlogram of residuals ====\n')
         acf_results, _, q_stat = acf(model_fit.resid, nlags=15, qstat=True)
         pacf_results = pacf(model_fit.resid, nlags=15)
-        print('len(acf): %d, len(pacf): %d, len(q): %d\n' % (len(acf_results), len(pacf_results), len(q_stat)))
         for clag in range(0, 16):
             print('%d:' % (clag + 1), acf_results[clag], pacf_results[clag], '-' if clag - 1 < 0 else q_stat[clag - 1], sep='\t')
         print()
