@@ -213,26 +213,21 @@ def arima_model(df: pd.DataFrame, cols: list, lag: int, order: int, moving_avg_m
         print()
 
         if with_graph is True:
-            plot_pacf(residuals, title='PAC plot for residuals of %s' % col)
+            plot_pacf(residuals, lags=15, title='ARIMA(%d, %d, %d): PAC plot for residuals of %s' % (lag, order, moving_avg_model, col))
             plt.show()
 
             #residuals.plot(kind='kde', title='Density of residuals %s' % col)
             #plt.show()
 
-            ax = pd.plotting.autocorrelation_plot(residuals)
-            ax.set_title('AC plot for residuals of %s' % col)
+            ax = pd.plotting.autocorrelation_plot(pd.DataFrame(acf_results))
+            ax.set_title('ARIMA(%d, %d, %d): AC plot for residuals of %s' % (lag, order, moving_avg_model, col))
             plt.show()
 
-def arma(df: pd.DataFrame, cols: list):
-    #arma_model(df, cols, lag=0, moving_avg_model=0)
-    #arma_model(df, cols, lag=0, moving_avg_model=1)
-    #arma_model(df, cols, lag=1, moving_avg_model=0)
-    #arma_model(df, cols, lag=1, moving_avg_model=1)
-
-    arima_model(df, cols, lag=0, order=0, moving_avg_model=0, with_graph=False)
-    arima_model(df, cols, lag=0, order=0, moving_avg_model=1, with_graph=False)
-    arima_model(df, cols, lag=1, order=0, moving_avg_model=0, with_graph=False)
-    arima_model(df, cols, lag=1, order=0, moving_avg_model=1, with_graph=False)
+def arma(df: pd.DataFrame, cols: list, with_graph: bool = True):
+    arima_model(df, cols, lag=0, order=0, moving_avg_model=0, with_graph=with_graph)
+    arima_model(df, cols, lag=0, order=0, moving_avg_model=1, with_graph=with_graph)
+    arima_model(df, cols, lag=1, order=0, moving_avg_model=0, with_graph=with_graph)
+    arima_model(df, cols, lag=1, order=0, moving_avg_model=1, with_graph=with_graph)
 
 def arma_model(df: pd.DataFrame, cols: list, lag: int, moving_avg_model: int):
     for col in cols:
@@ -283,7 +278,7 @@ def main():
     dataframe_acf_pacf(btc_data, stat_cols)
 
     arima(btc_data, list(filter(lambda x: x != 'difficulty', stat_cols)), with_graph=False)
-    arma(btc_data, list(filter(lambda x: x == 'difficulty', stat_cols)))
+    arma(btc_data, list(filter(lambda x: x == 'difficulty', stat_cols)), with_graph=False)
 
 if __name__ == '__main__':
     main()
