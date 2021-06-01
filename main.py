@@ -9,6 +9,7 @@ from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 from statsmodels.tsa.stattools import adfuller, kpss, pacf, acf
 from statsmodels.tsa.arima.model import ARIMA
 from statsmodels.tsa.arima_model import ARMA
+from statsmodels.tools.eval_measures import rmse, meanabs
 from statsmodels.stats.stattools import jarque_bera
 
 def read_csv(filename: str, original_cols: list, new_cols: list = None):
@@ -229,52 +230,65 @@ def arma(df: pd.DataFrame, cols: list, with_graph: bool = True):
     arima_model(df, cols, lag=1, order=0, moving_avg_model=0, with_graph=with_graph)
     arima_model(df, cols, lag=1, order=0, moving_avg_model=1, with_graph=with_graph)
 
-#def arma_model(df: pd.DataFrame, cols: list, lag: int, moving_avg_model: int):
-#    for col in cols:
-#        model = ARMA(df[col], order=(lag, moving_avg_model))
-#        model_fit = model.fit()
-#
-#        print('\t==== Summary of ARIMA(%d, %d) model for %s ====\n' % (lag, moving_avg_model, col))
-#        print(model_fit.summary())
-#        print()
-#
-#        print('\t==== Summary of residuals for %s ====\n' % col)
-#        residuals = pd.DataFrame(model_fit.resid)
-#        print(residuals.describe())
-#        print()
-
 def forecast_arima(df: pd.DataFrame, cols: list, with_graph: bool = True):
+    lag =  0
+    order = 1
+    moving_avg_model = 0
+    steps = 50
+
     for col in cols:
-        model = ARIMA(df[col], order=(lag, order, moving_avg_model))
+        model = ARIMA(df[col].iloc[:-steps], order=(lag, order, moving_avg_model))
         model_fit = model.fit()
 
-        model_for = model_fit.forecast()[0]
+        model_for = model_fit.get_forecast(steps=steps, alpha=0.05)
         print('\t==== Summary of forecast ARIMA(%d, %d, %d) ====\n' % (lag, order, moving_avg_model))
-        print(model_for.summary())
+        print(model_for.summary_frame(), model_for.conf_int(), sep='\n')
+        print('RMSE: %f\nMAE: %f' % (rmse(df[col][-50:], model_for.predicted_mean), meanabs(df[col][-50:], model_for.predicted_mean)))
         print()
 
         if with_graph is True:
-            plt.plot()
-            ax = pd.plotting.autocorrelation_plot(pd.DataFrame(acf_results))
-            ax.set_title('ARIMA(%d, %d, %d): AC plot for residuals of %s' % (lag, order, moving_avg_model, col))
+            plt.figure(figsize=(12,5))
+            plt.xlabel(col)
+            plt.title('Forecast for %s using ARIMA(%d, %d, %d)' % (col, lag, order, moving_avg_model))
+
+            ax1 = model_for.predicted_mean.plot(color='blue', grid=True, label='Actual')
+            ax2 = df[col][-50:].plot(color='red', grid=True, secondary_y=True, label='Estimated')
+
+            h1, l1 = ax1.get_legend_handles_labels()
+            h2, l2 = ax2.get_legend_handles_labels()
+
+            plt.legend(h1+h2, l1+l2, loc=2)
             plt.show()
 
 def forecast_arma(df: pd.DataFrame, cols: list, with_graph: bool = True):
+    lag = 1
+    moving_avg_model = 1
+    steps = 50
+
     for col in cols:
-        model = ARIMA(df[col], order=(lag, 0, moving_avg_model))
+        model = ARIMA(df[col].iloc[:-50], order=(lag, 0, moving_avg_model))
         model_fit = model.fit()
 
-        model_for = model_fit.forecast()[0]
-        print('\t==== Summary of forecast ARIMA(%d, %d, %d) ====\n' % (lag, order, moving_avg_model))
-        print(model_for.summary())
+        model_for = model_fit.get_forecast(steps=steps, alpha=0.05)
+        print('\t==== Summary of forecast ARIMA(%d, 0, %d) ====\n' % (lag, moving_avg_model))
+        print(model_for.summary_frame(), model_for.conf_int(), sep='\n')
+        print('RMSE: %f\nMAE: %f' % (rmse(df[col][-50:], model_for.predicted_mean), meanabs(df[col][-50:], model_for.predicted_mean)))
         print()
+        
 
         if with_graph is True:
-            plt.plot()
-            ax = pd.plotting.autocorrelation_plot(pd.DataFrame(acf_results))
-            ax.set_title('ARIMA(%d, %d, %d): AC plot for residuals of %s' % (lag, order, moving_avg_model, col))
-            plt.show()
+            plt.figure(figsize=(12,5))
+            plt.xlabel(col)
+            plt.title('Forecast for %s using ARIMA(%d, %d, %d)' % (col, lag, 0, moving_avg_model))
 
+            ax1 = model_for.predicted_mean.plot(color='blue', grid=True, label='Actual')
+            ax2 = df[col][-50:].plot(color='red', grid=True, secondary_y=True, label='Estimated')
+
+            h1, l1 = ax1.get_legend_handles_labels()
+            h2, l2 = ax2.get_legend_handles_labels()
+
+            plt.legend(h1+h2, l1+l2, loc=2)
+            plt.show()
 
 def main():
     original_cols = [
@@ -303,6 +317,7 @@ def main():
 
     btc_data = btc_data.reset_index().replace([ -np.inf, np.inf ], np.nan).dropna()
     btc_data.set_index('date', inplace=True)
+    btc_data = btc_data.resample('D').sum().fillna(0)
 
     dataframe_adfuller_test(btc_data, stat_cols, with_graph=False)
     dataframe_autocorrel_plot(btc_data, stat_cols, with_graph=False)
