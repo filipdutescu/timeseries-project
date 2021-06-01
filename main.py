@@ -229,19 +229,52 @@ def arma(df: pd.DataFrame, cols: list, with_graph: bool = True):
     arima_model(df, cols, lag=1, order=0, moving_avg_model=0, with_graph=with_graph)
     arima_model(df, cols, lag=1, order=0, moving_avg_model=1, with_graph=with_graph)
 
-def arma_model(df: pd.DataFrame, cols: list, lag: int, moving_avg_model: int):
+#def arma_model(df: pd.DataFrame, cols: list, lag: int, moving_avg_model: int):
+#    for col in cols:
+#        model = ARMA(df[col], order=(lag, moving_avg_model))
+#        model_fit = model.fit()
+#
+#        print('\t==== Summary of ARIMA(%d, %d) model for %s ====\n' % (lag, moving_avg_model, col))
+#        print(model_fit.summary())
+#        print()
+#
+#        print('\t==== Summary of residuals for %s ====\n' % col)
+#        residuals = pd.DataFrame(model_fit.resid)
+#        print(residuals.describe())
+#        print()
+
+def forecast_arima(df: pd.DataFrame, cols: list, with_graph: bool = True):
     for col in cols:
-        model = ARMA(df[col], order=(lag, moving_avg_model))
+        model = ARIMA(df[col], order=(lag, order, moving_avg_model))
         model_fit = model.fit()
 
-        print('\t==== Summary of ARIMA(%d, %d) model for %s ====\n' % (lag, moving_avg_model, col))
-        print(model_fit.summary())
+        model_for = model_fit.forecast()[0]
+        print('\t==== Summary of forecast ARIMA(%d, %d, %d) ====\n' % (lag, order, moving_avg_model))
+        print(model_for.summary())
         print()
 
-        print('\t==== Summary of residuals for %s ====\n' % col)
-        residuals = pd.DataFrame(model_fit.resid)
-        print(residuals.describe())
+        if with_graph is True:
+            plt.plot()
+            ax = pd.plotting.autocorrelation_plot(pd.DataFrame(acf_results))
+            ax.set_title('ARIMA(%d, %d, %d): AC plot for residuals of %s' % (lag, order, moving_avg_model, col))
+            plt.show()
+
+def forecast_arma(df: pd.DataFrame, cols: list, with_graph: bool = True):
+    for col in cols:
+        model = ARIMA(df[col], order=(lag, 0, moving_avg_model))
+        model_fit = model.fit()
+
+        model_for = model_fit.forecast()[0]
+        print('\t==== Summary of forecast ARIMA(%d, %d, %d) ====\n' % (lag, order, moving_avg_model))
+        print(model_for.summary())
         print()
+
+        if with_graph is True:
+            plt.plot()
+            ax = pd.plotting.autocorrelation_plot(pd.DataFrame(acf_results))
+            ax.set_title('ARIMA(%d, %d, %d): AC plot for residuals of %s' % (lag, order, moving_avg_model, col))
+            plt.show()
+
 
 def main():
     original_cols = [
@@ -279,6 +312,9 @@ def main():
 
     arima(btc_data, list(filter(lambda x: x != 'difficulty', stat_cols)), with_graph=False)
     arma(btc_data, list(filter(lambda x: x == 'difficulty', stat_cols)), with_graph=False)
+
+    forecast_arima(btc_data, list(filter(lambda x: x != 'difficulty', stat_cols)), with_graph=True)
+    forecast_arma(btc_data, list(filter(lambda x: x == 'difficulty', stat_cols)), with_graph=True)
 
 if __name__ == '__main__':
     main()
