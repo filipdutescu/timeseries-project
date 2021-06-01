@@ -163,8 +163,9 @@ def dataframe_acf_pacf(df: pd.DataFrame, cols: list):
 
         acf_results, _, q_stat = acf(df[col], nlags=15, qstat=True)
         pacf_results = pacf(df[col], nlags=15)
-        for lag in range(1, 16):
-            print('%d:\t' % lag, acf_results[lag], pacf_results[lag], q_stat[lag - 1])
+        print('len(acf): %d, len(pacf): %d, len(q): %d\n' % (len(acf_results), len(pacf_results), len(q_stat)))
+        for lag in range(0, 16):
+            print('%d:' % (lag + 1), acf_results[lag], pacf_results[lag], '-' if lag - 1 < 0 else q_stat[lag - 1], sep='\t')
         print()
 
 def arima(df: pd.DataFrame, cols: list, with_graph: bool = False):
@@ -179,14 +180,6 @@ def arima_model(df: pd.DataFrame, cols: list, lag: int, order: int, moving_avg_m
         print(model_fit.summary())
         print()
 
-        if lag > 0 or moving_avg_model > 0:
-            hypothesis = list(model_fit.arparams) if lag > 0 else []
-            hypothesis.append(model_fit.maparams if moving_avg_model > 0 else [])
-            r_matrix = np.identity(len(hypothesis))
-            r_matrix = r_matrix[1:,:]
-            print('\t==== F Test ====\n', model_fit.f_test(r_matrix))
-            print()
-
         x_mean = df[col].mean()
         sst = df[col].apply(lambda x: (x - x_mean) ** 2).sum()
         ssr = sst - model_fit.sse
@@ -194,9 +187,27 @@ def arima_model(df: pd.DataFrame, cols: list, lag: int, order: int, moving_avg_m
         print('R-squared: %f\n' % r_squared)
         n = len(df[col])
         k = len(model_fit.arroots) + len(model_fit.maroots)
+        print('n: %d, k: %d' % (n, k))
         adj_r_sqr = 1 - ((1 - r_squared) * (n - 1)) / (n - k - 1)
         print('Adjusted R-squared: %f' % adj_r_sqr)
         print()
+
+        print('\t==== Correlogram of residuals ====\n')
+        acf_results, _, q_stat = acf(model_fit.resid, nlags=15, qstat=True)
+        pacf_results = pacf(model_fit.resid, nlags=15)
+        print('len(acf): %d, len(pacf): %d, len(q): %d\n' % (len(acf_results), len(pacf_results), len(q_stat)))
+        for clag in range(0, 16):
+            print('%d:' % (clag + 1), acf_results[clag], pacf_results[clag], '-' if clag - 1 < 0 else q_stat[clag - 1], sep='\t')
+        print()
+
+        if lag > 0 or moving_avg_model > 0:
+            r_matrix = '(ar.L1 = 0)' if lag > 0 else ''
+            if len(r_matrix) > 0 and moving_avg_model > 0:
+                r_matrix = r_matrix + ','
+            r_matrix = r_matrix + ('(ma.L1 = 0)' if moving_avg_model > 0 else '')
+            f_test = model_fit.f_test(r_matrix)
+            print('\t==== F Test ====\n', f_test.summary())
+            print()
 
         print('\t==== Summary of residuals for %s ====\n' % col)
         residuals = pd.DataFrame(model_fit.resid)
